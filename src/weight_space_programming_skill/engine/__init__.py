@@ -19,7 +19,12 @@ from .tensor_engine import (
     inspect_tensor,
     summarize_weights,
 )
+from .causal_falsification_verifier import (
+    CausalFalsificationVerifier,
+    EditGateViolation,
+)
 from .pareto_surgery_planner import ParetoSurgeryPlanner
+from .selective_precision_controller import SelectivePrecisionController
 from .subspace_feature_analyzer import (
     compute_spectral_regularization_delta,
     profile_matrix_subspace,
@@ -72,6 +77,9 @@ __all__ = [
     "compute_spectral_regularization_delta",
     "project_delta_onto_null_space",
     "ParetoSurgeryPlanner",
+    "SelectivePrecisionController",
+    "CausalFalsificationVerifier",
+    "EditGateViolation",
     # Evaluation & Infrastructure
     "compare_models",
     "evaluate_metrics",
