@@ -21,8 +21,8 @@ classifiers = [
 # add optional deps here
 
 [project.scripts]
-wsp = "weight_space_programming_skill.cli:main"
-wsp-mcp = "weight_space_programming_skill.engine.mcp_server:main"
+wsp = "cli:main"
+wsp-mcp = "engine.mcp_server:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

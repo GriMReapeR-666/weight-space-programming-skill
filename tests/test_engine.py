@@ -4,7 +4,7 @@ import os
 import tempfile
 import pytest
 
-from weight_space_programming_skill.engine import (
+from engine import (
     AblationMode,
     PatchOperation,
     analyze_weight_directions,
@@ -259,7 +259,7 @@ def test_patch_engine_lifecycle(tiny_checkpoint):
         assert os.path.exists(restored_file)
 
         # Restored model weights must match original exactly
-        from weight_space_programming_skill.engine.patch_engine import verify_model_equivalence
+        from engine.patch_engine import verify_model_equivalence
         assert verify_model_equivalence(path, restored_file) is True
     finally:
         for p in (patched_file, restored_file):
@@ -297,7 +297,7 @@ def test_compare_models():
 # ---------------------------------------------------------------------------
 def test_mcp_server_protocol(tiny_checkpoint):
     path, _ = tiny_checkpoint
-    from weight_space_programming_skill.engine import MCPServer
+    from engine import MCPServer
     import json
 
     server = MCPServer()
@@ -335,7 +335,7 @@ def test_mcp_server_protocol(tiny_checkpoint):
 
 def test_mcp_server_wsp_x_tools(tiny_checkpoint):
     path, _ = tiny_checkpoint
-    from weight_space_programming_skill.engine import MCPServer
+    from engine import MCPServer
     import json
 
     server = MCPServer()
@@ -530,7 +530,7 @@ def test_mcp_server_wsp_x_tools(tiny_checkpoint):
 
 def test_distillation_and_sot_engines(tiny_checkpoint):
     path, _ = tiny_checkpoint
-    from weight_space_programming_skill.engine import (
+    from engine import (
         DistillationController,
         SocietyOfThoughtEngine,
     )
@@ -569,7 +569,7 @@ def test_distillation_and_sot_engines(tiny_checkpoint):
 
 
 def test_recursive_self_improvement_engine():
-    from weight_space_programming_skill.engine import (
+    from engine import (
         ReasoningRollout,
         RecursiveSelfImprovementEngine,
     )

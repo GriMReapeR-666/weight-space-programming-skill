@@ -5,8 +5,10 @@ import pytest
 torch = pytest.importorskip("torch")
 nn = torch.nn
 
-from weight_space_programming_skill.engine import (  # noqa: E402
+from engine import (  # noqa: E402
+    CapabilitySubspaceMap,
     ParetoSurgeryPlanner,
+    SubspaceProfile,
     compute_spectral_regularization_delta,
     profile_matrix_subspace,
     project_delta_onto_null_space,
@@ -65,8 +67,6 @@ def test_project_delta_onto_null_space_orthogonal():
 
 
 def test_pareto_surgery_planner_formulation():
-    from weight_space_programming_skill.engine import CapabilitySubspaceMap, SubspaceProfile
-
     mock_map = CapabilitySubspaceMap(
         model_path="dummy.safetensors",
         total_matrices_profiled=2,

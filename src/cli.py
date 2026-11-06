@@ -150,7 +150,7 @@ def _route_log():
 
 
 def _route_mcp():
-    from weight_space_programming_skill.engine import MCPServer
+    from engine import MCPServer
     server = MCPServer()
     server.run_stdio()
 
@@ -163,8 +163,8 @@ def _route_profile():
     p.add_argument("--cond-threshold", type=float, default=100.0, help="Condition number limit")
     args = p.parse_args()
 
-    from weight_space_programming_skill.engine import profile_model_subspaces
-    from weight_space_programming_skill.engine.mcp_server import _to_serializable
+    from engine import profile_model_subspaces
+    from engine.mcp_server import _to_serializable
     mapping = profile_model_subspaces(args.checkpoint, cond_threshold=args.cond_threshold)
     print(json.dumps(_to_serializable(mapping), indent=2))
 
@@ -179,8 +179,8 @@ def _route_plan():
     p.add_argument("--cond-limit", type=float, default=250.0, help="Condition limit")
     args = p.parse_args()
 
-    from weight_space_programming_skill.engine import ParetoSurgeryPlanner
-    from weight_space_programming_skill.engine.mcp_server import _to_serializable
+    from engine import ParetoSurgeryPlanner
+    from engine.mcp_server import _to_serializable
     plan = ParetoSurgeryPlanner.formulate_plan(
         checkpoint_path=args.checkpoint,
         objective=args.objective,
@@ -196,7 +196,7 @@ def _route_gate():
     p.add_argument("--tensor", required=True, help="Target tensor name")
     args = p.parse_args()
 
-    from weight_space_programming_skill.engine import CausalFalsificationVerifier, EditGateViolation
+    from engine import CausalFalsificationVerifier, EditGateViolation
     try:
         CausalFalsificationVerifier.verify_target_allowed(args.tensor)
         print(f"PASS: Target '{args.tensor}' is allowed for editing.")
@@ -213,7 +213,7 @@ def _route_rsi():
     p.add_argument("--rollouts", help="Path to rollouts JSON file to run an RSI cycle")
     args = p.parse_args()
 
-    from weight_space_programming_skill.engine import (
+    from engine import (
         ErrorCatalogManager,
         ReasoningRollout,
         RecursiveSelfImprovementEngine,
@@ -257,8 +257,8 @@ def _route_distill():
     p.add_argument("--rank", type=int, default=8, help="Default LoRA rank")
     args = p.parse_args()
 
-    from weight_space_programming_skill.engine import DistillationController
-    from weight_space_programming_skill.engine.mcp_server import _to_serializable
+    from engine import DistillationController
+    from engine.mcp_server import _to_serializable
     rec = DistillationController.plan_distillation_strategy(
         student_checkpoint=args.student,
         cond_limit=args.cond_limit,
@@ -275,8 +275,8 @@ def _route_sot():
     p.add_argument("--trace", default="", help="Candidate trace to critique")
     args = p.parse_args()
 
-    from weight_space_programming_skill.engine import SocietyOfThoughtEngine
-    from weight_space_programming_skill.engine.mcp_server import _to_serializable
+    from engine import SocietyOfThoughtEngine
+    from engine.mcp_server import _to_serializable
     debate = SocietyOfThoughtEngine.simulate_debate(problem=args.problem, candidate_trace=args.trace)
     print(json.dumps(_to_serializable(debate), indent=2))
 

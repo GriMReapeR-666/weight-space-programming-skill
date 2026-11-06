@@ -1,6 +1,6 @@
 """Tests for Introspective Simulation, Critic Discernment, and TPT Sampler."""
 
-from weight_space_programming_skill.engine import (
+from engine import (
     CriticDiscernmentEngine,
     ErrorCatalogManager,
     FailurePattern,

@@ -11,7 +11,10 @@ import importlib
 import re
 from typing import List
 
-from weight_space_programming_skill.adapters import BaseAdapter
+try:
+    from adapters.base import BaseAdapter
+except ImportError:
+    from .adapters.base import BaseAdapter  # type: ignore
 
 
 class WeightSpaceProgram:
@@ -40,18 +43,24 @@ class WeightSpaceProgram:
         cannot be imported or contains no adapters, an empty list is returned.
         """
         try:
-            pkg = importlib.import_module("weight_space_programming_skill.adapters")
+            pkg = importlib.import_module("adapters")
         except Exception:
-            return []
+            try:
+                pkg = importlib.import_module("weight_space_programming_skill.adapters")
+            except Exception:
+                return []
         adapters: List[BaseAdapter] = []
         for name in getattr(pkg, "__all__", []):
             if name == "BaseAdapter":
                 continue
             try:
                 module_name = self._camel_to_snake(name)
-                module = importlib.import_module(
-                    f"weight_space_programming_skill.adapters.{module_name}"
-                )
+                try:
+                    module = importlib.import_module(f"adapters.{module_name}")
+                except Exception:
+                    module = importlib.import_module(
+                        f"weight_space_programming_skill.adapters.{module_name}"
+                    )
                 adapter_cls = getattr(module, name)
                 adapters.append(adapter_cls())
             except Exception:

@@ -4,7 +4,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from weight_space_programming_skill.engine import (  # noqa: E402
+from engine import (  # noqa: E402
     CausalFalsificationVerifier,
     EditGateViolation,
     SelectivePrecisionController,

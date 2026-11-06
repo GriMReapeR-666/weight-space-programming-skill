@@ -31,7 +31,7 @@ def _save_pt(sd):
 # 1. WeightSpaceProgram core still works
 # ---------------------------------------------------------------------------
 def test_core_generic_adapter():
-    from weight_space_programming_skill import WeightSpaceProgram
+    from core import WeightSpaceProgram
     prog = WeightSpaceProgram()
     result = prog.run("hello")
     assert "[generic] hello" in result

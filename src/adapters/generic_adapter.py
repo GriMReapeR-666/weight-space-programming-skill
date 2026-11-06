@@ -4,7 +4,10 @@ Simply echoes the prompt back. Replace with real implementation when needed.
 """
 
 from .base import BaseAdapter
-from ..utils import logger
+try:
+    from utils import logger
+except ImportError:
+    from ..utils import logger  # type: ignore
 
 
 class GenericAdapter(BaseAdapter):

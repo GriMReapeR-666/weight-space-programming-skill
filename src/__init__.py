@@ -41,7 +41,7 @@ from .engine import (
     trace_generation,
     validate_patch,
 )
-from .src import WeightSpaceProgram
+from .core import WeightSpaceProgram
 
 __all__ = [
     "WeightSpaceProgram",

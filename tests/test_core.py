@@ -1,10 +1,12 @@
-from weight_space_programming_skill import WeightSpaceProgram
+from core import WeightSpaceProgram
+import core
 
 
 def test_no_adapters(monkeypatch):
     # Temporarily clear adapters by monkeypatching the import
     monkeypatch.setattr(
-        'weight_space_programming_skill.src.core.importlib.import_module',
+        core.importlib,
+        'import_module',
         lambda name: type('mod', (), {'__path__': []})
     )
     wsp = WeightSpaceProgram()
