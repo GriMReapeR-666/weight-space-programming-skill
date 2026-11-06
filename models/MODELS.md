@@ -2,32 +2,18 @@
 
 > **This directory is gitignored — drop local model files here.**
 
-Model weights are never committed. This folder is the conventional local
-drop-zone for checkpoints you want to run the WSP tools against.
+Model weights are never committed to the repository. This folder is the conventional local
+drop-zone for checkpoints you want to inspect, profile, patch, or evaluate using WSP tools.
 
 ## Quick-start
 
 ```bash
-# Download a model from Hugging Face
-python -c "
-from huggingface_hub import hf_hub_download
-hf_hub_download('jaswanthsanjay88/rev-decision-model', 'model.safetensors', local_dir='models/rev-decision-model')
-"
+# 1. Inspect any local checkpoint
+python -m weight_space_programming_skill inspect models/<your-model>/model.safetensors
 
-# Inspect it
-python wsp_protocol/tools/tensor_summary.py models/rev-decision-model/model.safetensors
+# 2. Profile condition numbers and singular spectrum
+python -m weight_space_programming_skill profile models/<your-model>/model.safetensors --cond-threshold 100.0
 
-# Auto-generate an adapter skeleton
-python wsp_protocol/tools/scaffold_adapter.py models/rev-decision-model/model.safetensors --json
-
-# LoRA injection plan
-python wsp_protocol/tools/lora_inject.py inspect models/rev-decision-model/model.safetensors
+# 3. Formulate Pareto-constrained surgery plan
+python -m weight_space_programming_skill plan models/<your-model>/model.safetensors --objective "Stabilize MLP"
 ```
-
-## Tested models
-
-| Model | HF repo | Format | Size |
-|-------|---------|--------|------|
-| rev-decision-model | `jaswanthsanjay88/rev-decision-model` | safetensors | ~421M params |
-
-Add your own entries here (not committed — edit locally).
