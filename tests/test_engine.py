@@ -490,6 +490,83 @@ def test_mcp_server_wsp_x_tools(tiny_checkpoint):
     cat = json.loads(res_cat["result"]["content"][0]["text"])
     assert cat["total_patterns"] >= 4
 
+    # 9. simulate_sot_debate
+    req_sot = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 19,
+        "method": "tools/call",
+        "params": {
+            "name": "simulate_sot_debate",
+            "arguments": {
+                "problem": "Factorize 91",
+                "candidate_trace": "91 is prime because it ends in 1",
+            },
+        },
+    })
+    res_sot = json.loads(server.process_message(req_sot))
+    sot = json.loads(res_sot["result"]["content"][0]["text"])
+    assert "analyst_perspective" in sot
+    assert "skeptic_perspective" in sot
+    assert "synthesized_resolution" in sot
+
+    # 10. plan_distillation
+    req_dist = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 20,
+        "method": "tools/call",
+        "params": {
+            "name": "plan_distillation",
+            "arguments": {
+                "student_checkpoint": path,
+                "cond_limit": 100.0,
+            },
+        },
+    })
+    res_dist = json.loads(server.process_message(req_dist))
+    dist = json.loads(res_dist["result"]["content"][0]["text"])
+    assert "target_layers_to_train" in dist
+    assert "layer_plans" in dist
+
+
+def test_distillation_and_sot_engines(tiny_checkpoint):
+    path, _ = tiny_checkpoint
+    from weight_space_programming_skill.engine import (
+        DistillationController,
+        SocietyOfThoughtEngine,
+    )
+    import torch
+
+    # 1. Society of Thought simulation
+    debate = SocietyOfThoughtEngine.simulate_debate(
+        problem="Solve quadratic equation",
+        candidate_trace="Attention copying loop hits maximum token limit",
+    )
+    assert "Analyst Perspective" in debate.analyst_perspective
+    assert "Skeptic Perspective" in debate.skeptic_perspective
+    assert "Verifier Perspective" in debate.verifier_perspective
+    assert debate.confidence_score > 0.0
+
+    # 2. Distillation strategy planning
+    rec = DistillationController.plan_distillation_strategy(path, cond_limit=100.0)
+    assert rec.total_layers_analyzed > 0
+    assert len(rec.protected_layers_to_freeze) > 0  # Embeddings/heads frozen
+    assert len(rec.target_layers_to_train) > 0
+
+    # 3. KD Loss computation
+    s_logits = torch.randn(4, 10)
+    t_logits = torch.randn(4, 10)
+    labels = torch.randint(0, 10, (4,))
+    loss = DistillationController.compute_kd_loss(s_logits, t_logits, labels, temperature=2.0, alpha=0.5)
+    assert float(loss.item()) > 0.0
+
+    # 4. Protected Distillation update
+    orig_w = torch.zeros(8, 8)
+    delta = torch.ones(8, 8) * 0.1
+    # Null basis: rank-2 basis
+    basis, _ = torch.linalg.qr(torch.randn(8, 2))
+    updated_w = DistillationController.apply_protected_distillation_update(orig_w, delta, basis)
+    assert updated_w.shape == orig_w.shape
+
 
 def test_recursive_self_improvement_engine():
     from weight_space_programming_skill.engine import (

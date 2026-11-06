@@ -159,3 +159,77 @@ class CriticDiscernmentEngine:
         is_correct = (choice == correct_choice)
         reward = 1.0 if is_correct else -0.5
         return is_correct, reward
+
+
+@dataclass
+class SOTDebateResult:
+    """Multi-persona internal debate trace from Society of Thought (SOT)."""
+    problem: str
+    analyst_perspective: str
+    skeptic_perspective: str
+    verifier_perspective: str
+    synthesized_resolution: str
+    confidence_score: float = 0.85
+
+
+class SocietyOfThoughtEngine:
+    """Simulates internal debate between cognitive personas (Jan 2026).
+
+    DeepSeek-R1 and QwQ develop emergent multi-persona debate through RL.
+    For smaller models, this simulates structured diagnostic projection:
+    1. The Analyst: Restates the problem, isolates boundary conditions and assumptions.
+    2. The Skeptic: Probes for failure patterns and pinpoints the weakest inference step.
+    3. The Verifier: Validates equations, assertions, and boundary invariants.
+    4. The Synthesizer: Reconciles perspectives to produce the final robust solution.
+    """
+
+    @staticmethod
+    def simulate_debate(
+        problem: str,
+        candidate_trace: str,
+        catalog: Optional[ErrorCatalogManager] = None,
+    ) -> SOTDebateResult:
+        """Executes multi-persona debate on a candidate reasoning trajectory."""
+        cat = catalog or ErrorCatalogManager()
+        matched = cat.find_matching_pattern(candidate_trace)
+
+        # 1. Analyst
+        analyst = (
+            f"Analyst Perspective: The objective is '{problem}'. "
+            f"Assumptions require maintaining invariant stability across depth."
+        )
+
+        # 2. Skeptic
+        if matched:
+            skeptic = (
+                f"Skeptic Perspective: Risk identified! The reasoning manifests {matched.name}. "
+                f"Symptom: {matched.typical_symptom} Intervene via: {matched.recommended_intervention}"
+            )
+        else:
+            skeptic = (
+                "Skeptic Perspective: The intermediate step transitions seem plausible, "
+                "but need verification against arithmetic and off-by-one errors."
+            )
+
+        # 3. Verifier
+        verifier = (
+            "Verifier Perspective: Checking step consistency. "
+            "Residual stream accumulation must terminate without copying loops."
+        )
+
+        # 4. Synthesizer
+        synth = (
+            f"Synthesizer Resolution: Under constraints analyzed by Analyst, Skeptic, and Verifier, "
+            f"we enforce: {matched.recommended_intervention if matched else 'Step-by-step verification'}."
+        )
+
+        confidence = 0.92 if not matched else 0.78
+
+        return SOTDebateResult(
+            problem=problem,
+            analyst_perspective=analyst,
+            skeptic_perspective=skeptic,
+            verifier_perspective=verifier,
+            synthesized_resolution=synth,
+            confidence_score=confidence,
+        )

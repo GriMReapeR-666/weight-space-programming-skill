@@ -25,6 +25,8 @@ Usage:
     python -m weight_space_programming_skill plan model.safetensors [--objective "obj"]
     python -m weight_space_programming_skill gate --tensor "model.layers.0.mlp.down_proj.weight"
     python -m weight_space_programming_skill rsi --catalog
+    python -m weight_space_programming_skill distill student.safetensors [--cond-limit 250.0]
+    python -m weight_space_programming_skill sot --problem "calculate derivative"
     python -m weight_space_programming_skill mcp
 """
 import sys
@@ -64,12 +66,16 @@ def main():
         _route_gate()
     elif cmd == "rsi":
         _route_rsi()
+    elif cmd == "distill":
+        _route_distill()
+    elif cmd == "sot":
+        _route_sot()
     elif cmd == "mcp":
         _route_mcp()
     elif cmd in ("-h", "--help", "help"):
         print(__doc__)
     else:
-        print(f"Unknown command: {cmd}\n\nAvailable: inspect patch merge lora scaffold log profile plan gate rsi mcp")
+        print(f"Unknown command: {cmd}\n\nAvailable: inspect patch merge lora scaffold log profile plan gate rsi distill sot mcp")
         sys.exit(1)
 
 
@@ -240,6 +246,39 @@ def _route_rsi():
     engine = RecursiveSelfImprovementEngine()
     result = engine.run_cycle_on_traces(rollouts, verifier)
     print(json.dumps(result, indent=2))
+
+
+def _route_distill():
+    import argparse
+    import json
+    p = argparse.ArgumentParser(description="Weight-space guided distillation planning")
+    p.add_argument("student", help="Path to student checkpoint")
+    p.add_argument("--cond-limit", type=float, default=250.0, help="Condition number threshold")
+    p.add_argument("--rank", type=int, default=8, help="Default LoRA rank")
+    args = p.parse_args()
+
+    from weight_space_programming_skill.engine import DistillationController
+    from weight_space_programming_skill.engine.mcp_server import _to_serializable
+    rec = DistillationController.plan_distillation_strategy(
+        student_checkpoint=args.student,
+        cond_limit=args.cond_limit,
+        lora_rank_default=args.rank,
+    )
+    print(json.dumps(_to_serializable(rec), indent=2))
+
+
+def _route_sot():
+    import argparse
+    import json
+    p = argparse.ArgumentParser(description="Society of Thought (SOT) internal debate")
+    p.add_argument("--problem", required=True, help="Problem prompt")
+    p.add_argument("--trace", default="", help="Candidate trace to critique")
+    args = p.parse_args()
+
+    from weight_space_programming_skill.engine import SocietyOfThoughtEngine
+    from weight_space_programming_skill.engine.mcp_server import _to_serializable
+    debate = SocietyOfThoughtEngine.simulate_debate(problem=args.problem, candidate_trace=args.trace)
+    print(json.dumps(_to_serializable(debate), indent=2))
 
 
 if __name__ == "__main__":

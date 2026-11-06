@@ -23,11 +23,18 @@ from .causal_falsification_verifier import (
     CausalFalsificationVerifier,
     EditGateViolation,
 )
+from .distillation_controller import (
+    DistillationController,
+    DistillationLayerPlan,
+    DistillationRecommendation,
+)
 from .introspective_simulation import (
     CriticDiscernmentEngine,
     CritiquePair,
     ErrorCatalogManager,
     FailurePattern,
+    SOTDebateResult,
+    SocietyOfThoughtEngine,
 )
 from .pareto_surgery_planner import ParetoSurgeryPlanner
 from .recursive_self_improvement import (
@@ -100,6 +107,8 @@ __all__ = [
     "FailurePattern",
     "CritiquePair",
     "CriticDiscernmentEngine",
+    "SOTDebateResult",
+    "SocietyOfThoughtEngine",
     "ReasoningRollout",
     "TPTBatchResult",
     "ThinkPruneTrainEngine",
@@ -107,6 +116,10 @@ __all__ = [
     "RecursiveSelfImprovementEngine",
     "RSICycleConfig",
     "RSICycleResult",
+    # Distillation Controller
+    "DistillationController",
+    "DistillationLayerPlan",
+    "DistillationRecommendation",
     # Evaluation & Infrastructure
     "compare_models",
     "evaluate_metrics",

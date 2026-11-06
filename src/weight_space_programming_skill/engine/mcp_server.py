@@ -17,10 +17,12 @@ import torch
 from .causal_falsification_verifier import (
     CausalFalsificationVerifier,
 )
+from .distillation_controller import DistillationController
 from .graph_engine import identify_architecture, reconstruct_graph
 from .introspective_simulation import (
     CriticDiscernmentEngine,
     ErrorCatalogManager,
+    SocietyOfThoughtEngine,
 )
 from .loader import ModelLoader
 from .pareto_surgery_planner import ParetoSurgeryPlanner
@@ -227,6 +229,26 @@ def _handle_export_error_catalog(args: Dict[str, Any]) -> Dict[str, Any]:
     catalog = ErrorCatalogManager()
     patterns = catalog.export_catalog()
     return {"total_patterns": len(patterns), "patterns": patterns}
+
+
+def _handle_simulate_sot_debate(args: Dict[str, Any]) -> Dict[str, Any]:
+    problem = args["problem"]
+    candidate_trace = args.get("candidate_trace", "")
+    catalog = ErrorCatalogManager()
+    debate = SocietyOfThoughtEngine.simulate_debate(problem, candidate_trace, catalog)
+    return _to_serializable(debate)
+
+
+def _handle_plan_distillation(args: Dict[str, Any]) -> Dict[str, Any]:
+    student_checkpoint = args["student_checkpoint"]
+    cond_limit = float(args.get("cond_limit", 250.0))
+    lora_rank = int(args.get("lora_rank_default", 8))
+    recommendation = DistillationController.plan_distillation_strategy(
+        student_checkpoint=student_checkpoint,
+        cond_limit=cond_limit,
+        lora_rank_default=lora_rank,
+    )
+    return _to_serializable(recommendation)
 
 
 # Declarative tool registry with schemas
@@ -463,6 +485,31 @@ TOOLS_REGISTRY: Dict[str, Dict[str, Any]] = {
             "properties": {},
         },
         "handler": _handle_export_error_catalog,
+    },
+    "simulate_sot_debate": {
+        "description": "Execute Society of Thought (SOT) internal cognitive debate (Analyst, Skeptic, Verifier, Synthesizer).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "problem": {"type": "string", "description": "Problem prompt or goal"},
+                "candidate_trace": {"type": "string", "description": "Candidate inference trace to critique and verify"},
+            },
+            "required": ["problem"],
+        },
+        "handler": _handle_simulate_sot_debate,
+    },
+    "plan_distillation": {
+        "description": "Formulate a weight-space guided distillation blueprint: maps student manifold bottlenecks to LoRA or null-space projection.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "student_checkpoint": {"type": "string", "description": "Path to student checkpoint file"},
+                "cond_limit": {"type": "number", "description": "Condition number threshold for degenerate manifolds", "default": 250.0},
+                "lora_rank_default": {"type": "integer", "description": "Default rank for LoRA adapters", "default": 8},
+            },
+            "required": ["student_checkpoint"],
+        },
+        "handler": _handle_plan_distillation,
     },
 }
 

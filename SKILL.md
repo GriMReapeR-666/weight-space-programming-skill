@@ -392,4 +392,46 @@ Use the capability contract and unknown-architecture protocol. Never assume Tran
 
 ### Tool implementation status
 
-The WSP tool API and MCP server documents define contracts, not pre-existing live services. Reference scripts are intentionally narrow: they support only the explicitly documented checkpoint shapes/formats and must not be described as universal adapters. Extend through tested format- and architecture-specific plugins.
+The WSP tool API and MCP server expose 19 programmatic JSON-RPC 2.0 tools via `wsp-mcp` (or `python -m weight_space_programming_skill mcp`):
+1. `inspect_model` — Checkpoint inspection, format detection, and tensor manifest.
+2. `identify_architecture` — Architectural family classification (GQA, RoPE, RMSNorm).
+3. `reconstruct_graph` — Computational DAG and layer execution order reconstruction.
+4. `inspect_tensor` — Detailed summary statistics (shape, dtype, quantiles, singular values).
+5. `summarize_weights` — Bulk parameter counts and tensor inventory across checkpoints.
+6. `analyze_weight_directions` — Singular value decomposition, effective rank, and condition numbers.
+7. `validate_patch` — Transactional pre-flight validation of weight delta patches.
+8. `apply_patch` — Transactional delta application with hash preservation.
+9. `rollback_patch` — Exact rollback to original checkpoint.
+10. `profile_subspaces` — Manifold profiling, condition number diagnostic map, and effective stable rank.
+11. `plan_surgery` — Pareto-constrained minimal-rank surgery DAG planning.
+12. `verify_edit_gate` — Multi-layer safety gate (locks embeddings/norms/heads, enforces 1% cap and L2 bounds).
+13. `dequantize_block` — Block-level GGUF Q4_0 and Q8_0 dequantization and distortion checks.
+14. `evaluate_critique` — Critic-Discernment Game (CDG) contrastive critique evaluation.
+15. `prune_traces` — Think-Prune-Train (TPT) ground-truth anchored trajectory pruning.
+16. `run_rsi_cycle` — End-to-end Recursive Self-Improvement cycle (TPT + CDG + Frontier Projection + verification).
+17. `export_error_catalog` — Export the persistent structural error catalog (`WSP-ERR-001` through `WSP-ERR-004`).
+18. `simulate_sot_debate` — Society of Thought (SOT) internal debate (Analyst, Skeptic, Verifier, Synthesizer).
+19. `plan_distillation` — Weight-space guided distillation blueprint mapping student manifold bottlenecks to LoRA or null-space projection.
+
+### Unified CLI Interface
+
+```bash
+# Model inspection and subspace profiling
+python -m weight_space_programming_skill inspect <model_path>
+python -m weight_space_programming_skill profile <model_path> --cond-threshold 100.0
+
+# Pareto surgery planning & edit gating
+python -m weight_space_programming_skill plan <model_path> --objective "Stabilize MLP"
+python -m weight_space_programming_skill gate --tensor "model.layers.0.mlp.down_proj.weight"
+
+# Introspective simulation, SOT debate, and distillation planning
+python -m weight_space_programming_skill rsi --catalog
+python -m weight_space_programming_skill rsi --rollouts rollouts.json
+python -m weight_space_programming_skill sot --problem "Factorize 91" --trace "..."
+python -m weight_space_programming_skill distill <student_model> --cond-limit 250.0
+
+# Stdio MCP Server daemon
+python -m weight_space_programming_skill mcp
+# or console script
+wsp-mcp
+```
