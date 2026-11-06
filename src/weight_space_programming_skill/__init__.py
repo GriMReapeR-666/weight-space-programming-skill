@@ -1,9 +1,86 @@
-"""Top-level package for the Weight Space Programming skill.
+"""Top-level package for the Weight Space Programming (WSP v5.0) Engine.
 
-Exports the :class:`WeightSpaceProgram` orchestrator so that
-``from weight_space_programming_skill import WeightSpaceProgram`` works.
+Exports the :class:`WeightSpaceProgram` orchestrator and the complete suite
+of weight-space runtime engine tools.
 """
 
+from .engine import (
+    AblationMode,
+    AblationResult,
+    ActivationTrace,
+    ActivationTracer,
+    CircuitMap,
+    CircuitNode,
+    ComputationGraph,
+    EvaluationResult,
+    GraphNode,
+    ModelFormat,
+    ModelLoader,
+    ModelMetadata,
+    PatchManifest,
+    PatchOperation,
+    TensorRole,
+    TensorSummary,
+    analyze_weight_directions,
+    apply_patch,
+    build_circuit_map,
+    capture_activations,
+    compare_models,
+    evaluate_candidate,
+    evaluate_metrics,
+    generate_patch,
+    identify_architecture,
+    inspect_model,
+    inspect_tensor,
+    optimize_patch,
+    reconstruct_graph,
+    rollback_patch,
+    run_activation_ablation,
+    run_parameter_ablation,
+    summarize_weights,
+    trace_generation,
+    validate_patch,
+)
 from .src import WeightSpaceProgram
 
-__all__ = ["WeightSpaceProgram"]
+__all__ = [
+    "WeightSpaceProgram",
+    # 17 Core Agent Tools
+    "inspect_model",
+    "identify_architecture",
+    "reconstruct_graph",
+    "inspect_tensor",
+    "summarize_weights",
+    "capture_activations",
+    "trace_generation",
+    "build_circuit_map",
+    "run_activation_ablation",
+    "run_parameter_ablation",
+    "analyze_weight_directions",
+    "generate_patch",
+    "evaluate_candidate",
+    "optimize_patch",
+    "validate_patch",
+    "apply_patch",
+    "rollback_patch",
+    # Evaluation & Infrastructure
+    "compare_models",
+    "evaluate_metrics",
+    "ModelLoader",
+    "ActivationTracer",
+    # Types
+    "ModelFormat",
+    "TensorRole",
+    "AblationMode",
+    "ModelMetadata",
+    "TensorSummary",
+    "GraphNode",
+    "ComputationGraph",
+    "ActivationTrace",
+    "CircuitNode",
+    "CircuitMap",
+    "AblationResult",
+    "PatchOperation",
+    "PatchManifest",
+    "EvaluationResult",
+]

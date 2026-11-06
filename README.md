@@ -67,25 +67,53 @@ python -m weight_space_programming_skill --help
 
 ---
 
-## Python API
+## Python API (WSP v5.0 Runtime)
 
 ```python
-from weight_space_programming_skill import WeightSpaceProgram
+from weight_space_programming_skill import (
+    inspect_model,
+    identify_architecture,
+    reconstruct_graph,
+    inspect_tensor,
+    summarize_weights,
+    analyze_weight_directions,
+    capture_activations,
+    trace_generation,
+    build_circuit_map,
+    run_activation_ablation,
+    run_parameter_ablation,
+    optimize_patch,
+    generate_patch,
+    validate_patch,
+    apply_patch,
+    rollback_patch,
+    compare_models,
+)
 
-wsp = WeightSpaceProgram()
-result = wsp.run("describe transformer attention weights")
-print(result)
+# 1. Model & Architecture Discovery
+meta = inspect_model("models/my_model/model.safetensors")
+arch = identify_architecture("models/my_model/model.safetensors")
+graph = reconstruct_graph("models/my_model/model.safetensors")
+
+# 2. Tensor & Directions Inspection
+summary = inspect_tensor("models/my_model/model.safetensors", "layers.0.self_attn.q_proj.weight")
+svd_info = analyze_weight_directions("models/my_model/model.safetensors", "layers.0.self_attn.q_proj.weight", top_k=5)
+
+# 3. Transactional Weight Patching & Reversibility
+manifest = generate_patch("base.pt", deltas={"layer.0.weight": delta_tensor}, output_patch_path="patch.json")
+validate_patch(manifest, "base.pt")
+apply_patch(manifest, "base.pt", "patched.pt")
+rollback_patch("patched.pt", manifest, "restored.pt")
 ```
 
 ---
 
-## Model files are gitignored
+## MCP Server (Agent Tool Interface)
 
-Weights never live in this repo. Use the helper:
+Run the built-in Model Context Protocol (MCP) server exposing all engine tools over JSON-RPC 2.0 stdio:
 
 ```bash
-python scripts/download_model.py <hf-repo-id>
-# → models/<name>/model.safetensors  (gitignored)
+python -m weight_space_programming_skill.engine.mcp_server
 ```
 
 ---
@@ -93,7 +121,7 @@ python scripts/download_model.py <hf-repo-id>
 ## Tests
 
 ```bash
-pytest -v        # 8 tests: core + full integration pipeline
+pytest -v        # 22 tests: core orchestrator + complete WSP v5.0 engine suite
 ```
 
 ---

@@ -1,7 +1,7 @@
 ---
 name: universal-all-purpose-weight-space-programming
-version: 4.0.0
-description: Universal, architecture-aware weight-space engineering for neural networks: discovery, analysis, diagnosis, optimization, transformation, training, merging, compression, validation and deployment.
+version: 5.0.0
+description: Operational Weight-Space Programming (WSP) Engine: programmatic model inspection, graph reconstruction, activation tracing, circuit mapping, causal ablation, gradient-free search, transactional patching, and regression evaluation.
 ---
 
 # Universal All-Purpose Weight-Space Programming

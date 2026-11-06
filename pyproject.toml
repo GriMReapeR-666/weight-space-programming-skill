@@ -25,6 +25,7 @@ where = ["src"]
 
 [tool.mypy]
 ignore_missing_imports = true
+follow_imports = "silent"
 disable_error_code = ["import-untyped", "import-not-found"]
 
 [tool.pytest.ini_options]
