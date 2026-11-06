@@ -123,9 +123,9 @@ class ModelLoader:
 
         # Infer basic layer count from tensor names
         layer_indices = set()
-        for t in tensors:
+        for t_info in tensors:
             import re
-            m = re.search(r"(?:layers?|blocks?|blk)\.(\d+)", t["name"])
+            m = re.search(r"(?:layers?|blocks?|blk)\.(\d+)", str(t_info["name"]))
             if m:
                 layer_indices.add(int(m.group(1)))
         layer_count = len(layer_indices)

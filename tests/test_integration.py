@@ -1,5 +1,8 @@
 """Integration test: end-to-end pipeline on a tiny randomly-initialised model."""
-import os, sys, tempfile, json
+import json
+import os
+import sys
+import tempfile
 import pytest
 
 TOOLS = os.path.join(os.path.dirname(__file__), "..", "wsp_protocol", "tools")
@@ -38,7 +41,7 @@ def test_core_generic_adapter():
 # 2. scaffold_adapter: load tensor inventory + build arch map
 # ---------------------------------------------------------------------------
 def test_scaffold_adapter():
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     _, sd = _make_tiny_model()
     pt = _save_pt(sd)
     try:
@@ -56,7 +59,7 @@ def test_scaffold_adapter():
 # 3. lora_inject: scaffold LoRA matrices + merge back
 # ---------------------------------------------------------------------------
 def test_lora_inject():
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     _, sd = _make_tiny_model()
     pt = _save_pt(sd)
     try:
@@ -95,7 +98,7 @@ def test_experiment_ledger():
 # 5. merge_models: linear merge of two tiny state_dicts
 # ---------------------------------------------------------------------------
 def test_merge_models_linear():
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     _, sd1 = _make_tiny_model()
     _, sd2 = _make_tiny_model()
     pt1 = _save_pt(sd1)
@@ -113,8 +116,10 @@ def test_merge_models_linear():
             assert reloaded[k].shape == sd1[k].shape
     finally:
         for p in (pt1, pt2, out.name):
-            try: os.unlink(p)
-            except FileNotFoundError: pass
+            try:
+                os.unlink(p)
+            except FileNotFoundError:
+                pass
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +127,7 @@ def test_merge_models_linear():
 # ---------------------------------------------------------------------------
 def test_tensor_summary_cli():
     import subprocess
-    torch = pytest.importorskip("torch")
+    pytest.importorskip("torch")
     _, sd = _make_tiny_model()
     pt = _save_pt(sd)
     try:

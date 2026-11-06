@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Download a HuggingFace model into models/<name>/ — weights stay gitignored."""
-import argparse, os, sys
+import argparse
+import sys
 from pathlib import Path
+
 
 def main():
     p = argparse.ArgumentParser(description="Download an HF model into models/")
@@ -25,11 +27,11 @@ def main():
 
     print(f"Downloading {a.repo_id} -> {out} ...")
     path = snapshot_download(repo_id=a.repo_id, local_dir=str(out), ignore_patterns=ignore)
-    # Report
     files = list(Path(path).rglob("*"))
     total = sum(f.stat().st_size for f in files if f.is_file())
-    print(f"Done. {len([f for f in files if f.is_file()])} files, {total/1e6:.1f} MB")
+    print(f"Done. {len([f for f in files if f.is_file()])} files, {total / 1e6:.1f} MB")
     print(f"Path: {path}")
+
 
 if __name__ == "__main__":
     main()

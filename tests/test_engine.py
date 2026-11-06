@@ -4,18 +4,14 @@ import os
 import tempfile
 import pytest
 
-torch = pytest.importorskip("torch")
-nn = torch.nn
-
 from weight_space_programming_skill.engine import (
     AblationMode,
-    ModelLoader,
+    PatchOperation,
     analyze_weight_directions,
     apply_patch,
     build_circuit_map,
     capture_activations,
     compare_models,
-    evaluate_candidate,
     generate_patch,
     identify_architecture,
     inspect_model,
@@ -27,8 +23,14 @@ from weight_space_programming_skill.engine import (
     run_parameter_ablation,
     summarize_weights,
     validate_patch,
-    PatchOperation,
 )
+
+try:
+    import torch
+    import torch.nn as nn
+except ImportError:
+    torch = pytest.importorskip("torch")  # type: ignore
+    nn = torch.nn  # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -329,4 +331,3 @@ def test_mcp_server_protocol(tiny_checkpoint):
     payload = json.loads(call_res["result"]["content"][0]["text"])
     assert payload["total_parameters"] > 0
     assert payload["format"] in ("pytorch", "pt")
-
