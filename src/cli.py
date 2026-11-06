@@ -27,6 +27,9 @@ Usage:
     python -m weight_space_programming_skill rsi --catalog
     python -m weight_space_programming_skill distill student.safetensors [--cond-limit 250.0]
     python -m weight_space_programming_skill sot --problem "calculate derivative"
+    python -m weight_space_programming_skill triage --query "repeats tokens endlessly"
+    python -m weight_space_programming_skill diagnose model.safetensors [--behavior "repetition loop"] [--cond-limit 200.0]
+    python -m weight_space_programming_skill remediate model.safetensors --output remediated.safetensors [--behavior "..."]
     python -m weight_space_programming_skill mcp
 """
 import sys
@@ -70,12 +73,18 @@ def main():
         _route_distill()
     elif cmd == "sot":
         _route_sot()
+    elif cmd == "triage":
+        _route_triage()
+    elif cmd == "diagnose":
+        _route_diagnose()
+    elif cmd == "remediate":
+        _route_remediate()
     elif cmd == "mcp":
         _route_mcp()
     elif cmd in ("-h", "--help", "help"):
         print(__doc__)
     else:
-        print(f"Unknown command: {cmd}\n\nAvailable: inspect patch merge lora scaffold log profile plan gate rsi distill sot mcp")
+        print(f"Unknown command: {cmd}\n\nAvailable: inspect patch merge lora scaffold log profile plan gate rsi distill sot triage diagnose remediate mcp")
         sys.exit(1)
 
 
@@ -279,6 +288,68 @@ def _route_sot():
     from engine.mcp_server import _to_serializable
     debate = SocietyOfThoughtEngine.simulate_debate(problem=args.problem, candidate_trace=args.trace)
     print(json.dumps(_to_serializable(debate), indent=2))
+
+
+def _route_triage():
+    import argparse
+    import json
+    p = argparse.ArgumentParser(description="Triage behavioral anomalies against mechanistic defect catalog")
+    p.add_argument("--query", required=True, help="Symptom or behavioral failure description")
+    args = p.parse_args()
+
+    from engine import MechanisticDiagnostician
+    from engine.mcp_server import _to_serializable
+    diagnostician = MechanisticDiagnostician()
+    matches = diagnostician.triage_anomalies(args.query)
+    print(json.dumps(_to_serializable(matches), indent=2))
+
+
+def _route_diagnose():
+    import argparse
+    import json
+    p = argparse.ArgumentParser(description="Mechanistic diagnostic inspection of model checkpoint")
+    p.add_argument("checkpoint", help="Path to model checkpoint")
+    p.add_argument("--behavior", action="append", default=[], help="Observed behavioral anomaly (can specify multiple)")
+    p.add_argument("--cond-limit", type=float, default=200.0, help="Condition number limit threshold")
+    p.add_argument("--markdown", action="store_true", help="Output human-readable markdown summary")
+    args = p.parse_args()
+
+    from engine import MechanisticDiagnostician
+    from engine.mcp_server import _to_serializable
+    diagnostician = MechanisticDiagnostician()
+    report = diagnostician.inspect_checkpoint(
+        checkpoint_path=args.checkpoint,
+        observed_behaviors=args.behavior,
+        cond_limit=args.cond_limit,
+    )
+    if args.markdown:
+        print(diagnostician.generate_diagnostic_summary(report))
+    else:
+        print(json.dumps(_to_serializable(report), indent=2))
+
+
+def _route_remediate():
+    import argparse
+    import json
+    p = argparse.ArgumentParser(description="Execute automated weight-space remediation on model checkpoint")
+    p.add_argument("checkpoint", help="Path to input model checkpoint")
+    p.add_argument("--output", required=True, help="Path to write remediated checkpoint")
+    p.add_argument("--behavior", action="append", default=[], help="Observed behavioral anomaly (can specify multiple)")
+    p.add_argument("--cond-limit", type=float, default=200.0, help="Condition number limit threshold")
+    args = p.parse_args()
+
+    from engine import MechanisticDiagnostician
+    diagnostician = MechanisticDiagnostician()
+    report = diagnostician.inspect_checkpoint(
+        checkpoint_path=args.checkpoint,
+        observed_behaviors=args.behavior,
+        cond_limit=args.cond_limit,
+    )
+    result = diagnostician.execute_remediation(
+        report=report,
+        output_checkpoint_path=args.output,
+    )
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

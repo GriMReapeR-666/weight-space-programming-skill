@@ -25,6 +25,7 @@ from .introspective_simulation import (
     SocietyOfThoughtEngine,
 )
 from .loader import ModelLoader
+from .mechanistic_diagnostician import MechanisticDiagnostician
 from .pareto_surgery_planner import ParetoSurgeryPlanner
 from .patch_engine import apply_patch, rollback_patch, validate_patch
 from .recursive_self_improvement import RecursiveSelfImprovementEngine
@@ -249,6 +250,41 @@ def _handle_plan_distillation(args: Dict[str, Any]) -> Dict[str, Any]:
         lora_rank_default=lora_rank,
     )
     return _to_serializable(recommendation)
+
+
+def _handle_triage_defect_anomalies(args: Dict[str, Any]) -> Dict[str, Any]:
+    query = args.get("query") or args.get("symptom_query", "")
+    diagnostician = MechanisticDiagnostician()
+    matches = diagnostician.triage_anomalies(query)
+    return {"query": query, "matched_defects": _to_serializable(matches)}
+
+
+def _handle_diagnose_defects(args: Dict[str, Any]) -> Dict[str, Any]:
+    checkpoint_path = args["checkpoint_path"]
+    observed_behaviors = args.get("observed_behaviors", [])
+    cond_limit = float(args.get("cond_limit", 200.0))
+    diagnostician = MechanisticDiagnostician()
+    report = diagnostician.inspect_checkpoint(
+        checkpoint_path=checkpoint_path,
+        observed_behaviors=observed_behaviors,
+        cond_limit=cond_limit,
+    )
+    return _to_serializable(report)
+
+
+def _handle_execute_remediation(args: Dict[str, Any]) -> Dict[str, Any]:
+    checkpoint_path = args["checkpoint_path"]
+    output_checkpoint_path = args["output_checkpoint_path"]
+    observed_behaviors = args.get("observed_behaviors", [])
+    cond_limit = float(args.get("cond_limit", 200.0))
+    diagnostician = MechanisticDiagnostician()
+    report = diagnostician.inspect_checkpoint(
+        checkpoint_path=checkpoint_path,
+        observed_behaviors=observed_behaviors,
+        cond_limit=cond_limit,
+    )
+    result = diagnostician.execute_remediation(report, output_checkpoint_path)
+    return _to_serializable(result)
 
 
 # Declarative tool registry with schemas
@@ -510,6 +546,44 @@ TOOLS_REGISTRY: Dict[str, Dict[str, Any]] = {
             "required": ["student_checkpoint"],
         },
         "handler": _handle_plan_distillation,
+    },
+    "triage_defect_anomalies": {
+        "description": "Triage reported behavioral anomalies (repetition loops, deferral bias, etc.) against the mechanistic defect catalog.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Behavioral failure description or observed anomaly"},
+            },
+            "required": ["query"],
+        },
+        "handler": _handle_triage_defect_anomalies,
+    },
+    "diagnose_defects": {
+        "description": "Perform comprehensive spectral and circuit defect inspection on a model checkpoint to produce a DiagnosticReport.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "checkpoint_path": {"type": "string", "description": "Path to target model checkpoint"},
+                "observed_behaviors": {"type": "array", "items": {"type": "string"}, "description": "Reported failure symptoms"},
+                "cond_limit": {"type": "number", "description": "Condition number threshold", "default": 200.0},
+            },
+            "required": ["checkpoint_path"],
+        },
+        "handler": _handle_diagnose_defects,
+    },
+    "execute_remediation": {
+        "description": "Execute formulated weight-space remediation actions to heal diagnosed model defects and write remediated checkpoint.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "checkpoint_path": {"type": "string", "description": "Path to original model checkpoint"},
+                "output_checkpoint_path": {"type": "string", "description": "Path for new remediated checkpoint"},
+                "observed_behaviors": {"type": "array", "items": {"type": "string"}, "description": "Reported failure symptoms"},
+                "cond_limit": {"type": "number", "description": "Condition number threshold", "default": 200.0},
+            },
+            "required": ["checkpoint_path", "output_checkpoint_path"],
+        },
+        "handler": _handle_execute_remediation,
     },
 }
 

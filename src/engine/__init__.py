@@ -43,6 +43,14 @@ from .recursive_self_improvement import (
     RecursiveSelfImprovementEngine,
 )
 from .selective_precision_controller import SelectivePrecisionController
+from .mechanistic_diagnostician import (
+    DefectCategory,
+    DefectFinding,
+    DefectSeverity,
+    DiagnosticReport,
+    MechanisticDefectSpec,
+    MechanisticDiagnostician,
+)
 from .tpt_sampler import (
     ReasoningRollout,
     TPTBatchResult,
@@ -120,6 +128,13 @@ __all__ = [
     "DistillationController",
     "DistillationLayerPlan",
     "DistillationRecommendation",
+    # Mechanistic Diagnostician & Remediation
+    "MechanisticDiagnostician",
+    "MechanisticDefectSpec",
+    "DefectCategory",
+    "DefectSeverity",
+    "DefectFinding",
+    "DiagnosticReport",
     # Evaluation & Infrastructure
     "compare_models",
     "evaluate_metrics",
