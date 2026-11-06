@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Weight-space adapter manifest",
+  "type": "object",
+  "required": [
+    "adapter_id",
+    "api_version",
+    "adapter_version",
+    "supported_artifacts",
+    "capabilities",
+    "operations",
+    "tests"
+  ],
+  "properties": {
+    "adapter_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "api_version": {
+      "type": "string"
+    },
+    "adapter_version": {
+      "type": "string"
+    },
+    "supported_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "frameworks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "tested_versions"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "tested_versions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "architecture_signatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "signal",
+          "polarity"
+        ],
+        "properties": {
+          "signal": {
+            "type": "string"
+          },
+          "polarity": {
+            "enum": [
+              "positive",
+              "negative"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "supported",
+          "partial",
+          "unsupported",
+          "unknown"
+        ]
+      }
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "preconditions",
+          "validation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "preconditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "validation": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rollback": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "properties": {
+        "trust_level": {
+          "enum": [
+            "trusted",
+            "reviewed",
+            "untrusted"
+          ]
+        },
+        "network": {
+          "type": "boolean"
+        },
+        "write_scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

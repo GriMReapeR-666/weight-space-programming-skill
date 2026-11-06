@@ -1,0 +1,16 @@
+# Core
+jsonschema
+
+# Testing
+pytest
+pytest-timeout
+
+# Type / lint (optional, used in CI)
+mypy
+flake8
+
+# Weight-space tools — optional, install what you need
+# torch>=2.0        # required for .pt tools, activation capture, lora, merge
+# safetensors       # required for .safetensors tools
+# gguf              # required for gguf_reader
+# huggingface_hub   # required for scripts/download_model.py

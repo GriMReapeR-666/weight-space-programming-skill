@@ -1,0 +1,39 @@
+{
+  "adapter_id": "org.example.my-architecture",
+  "api_version": "1.0",
+  "adapter_version": "0.1.0",
+  "supported_artifacts": [
+    "example-checkpoint"
+  ],
+  "frameworks": [
+    {
+      "name": "example-framework",
+      "tested_versions": [
+        "1.0"
+      ]
+    }
+  ],
+  "architecture_signatures": [
+    {
+      "signal": "config field architecture_type equals ExampleNet",
+      "polarity": "positive",
+      "weight": 1.0
+    }
+  ],
+  "capabilities": {
+    "inspect_config": "supported",
+    "enumerate_parameters": "supported",
+    "run_inference": "partial",
+    "train": "unknown",
+    "quantize": "unsupported"
+  },
+  "operations": [],
+  "safety": {
+    "trust_level": "untrusted",
+    "network": false,
+    "write_scopes": []
+  },
+  "tests": [
+    "tests/test_adapter_conformance.py"
+  ]
+}

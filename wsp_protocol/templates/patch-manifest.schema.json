@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WSP Patch Manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "patch_id",
+    "base_model_hash",
+    "adapter_id",
+    "operations",
+    "evaluation_ref",
+    "rollback_ref"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "patch_id": {
+      "type": "string"
+    },
+    "base_model_hash": {
+      "type": "string"
+    },
+    "adapter_id": {
+      "type": "string"
+    },
+    "adapter_version": {
+      "type": "string"
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "tensor_key",
+          "operation",
+          "expected_shape"
+        ],
+        "properties": {
+          "tensor_key": {
+            "type": "string"
+          },
+          "operation": {
+            "enum": [
+              "add",
+              "scale",
+              "mask",
+              "replace_slice",
+              "low_rank_add",
+              "adapter_coefficient"
+            ]
+          },
+          "expected_shape": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "dtype": {
+            "type": "string"
+          },
+          "slice": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "delta_artifact": {
+            "type": "string"
+          },
+          "delta_sha256": {
+            "type": "string"
+          },
+          "bounds": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "evaluation_ref": {
+      "type": "string"
+    },
+    "rollback_ref": {
+      "type": "string"
+    },
+    "human_approval": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

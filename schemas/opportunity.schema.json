@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "id",
+    "symptom",
+    "evidence",
+    "hypothesis",
+    "intervention",
+    "validation",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "symptom": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array"
+    },
+    "evidence_quality": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "affected_modules": {
+      "type": "array"
+    },
+    "hypothesis": {
+      "type": "string"
+    },
+    "intervention": {
+      "type": "string"
+    },
+    "expected_benefit": {
+      "type": "string"
+    },
+    "risks": {
+      "type": "array"
+    },
+    "resource_estimate": {
+      "type": "string"
+    },
+    "reversibility": {
+      "type": "string"
+    },
+    "validation": {
+      "type": "array"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "status": {
+      "enum": [
+        "investigate",
+        "planned",
+        "running",
+        "accepted",
+        "rejected",
+        "blocked"
+      ]
+    }
+  }
+}

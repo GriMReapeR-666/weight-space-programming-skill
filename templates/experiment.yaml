@@ -1,0 +1,20 @@
+id: exp-001
+base_model: /path/to/immutable/checkpoint
+base_hash: null
+architecture_adapter: discover
+method: investigate
+seed: 42
+data:
+  train: null
+  validation: null
+  protected_test: null
+metrics:
+  target: []
+  protected: []
+acceptance:
+  minimum_improvement: null
+  maximum_regression: null
+resources:
+  max_ram_gb: null
+  max_vram_gb: null
+  max_runtime_hours: null

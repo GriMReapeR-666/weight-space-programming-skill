@@ -1,0 +1,38 @@
+hypothesis_id: H-0001
+status: proposed
+target_model_hash: ""
+behavioral_failure: ""
+baseline_reproduction_ref: ""
+evidence:
+  - type: activation_summary
+    artifact_ref: ""
+    observation: ""
+suspected_component:
+  adapter_id: ""
+  module_selector: ""
+  tensor_keys: []
+mechanism_hypothesis: ""
+predictions:
+  - ""
+competing_explanations:
+  - ""
+intervention:
+  kind: activation_ablation # activation_ablation | parameter_ablation | parameter_delta | low_rank_delta | other
+  parameterization: ""
+  bounds: {}
+controls:
+  - matched_random_direction
+  - sham_noop
+  - clean_examples
+evaluation:
+  diagnostic_split: ""
+  search_split: ""
+  validation_split: ""
+  final_holdout: ""
+  metrics: []
+budget:
+  candidates: 20
+  max_changed_parameters: 10000
+  max_gpu_seconds: 600
+stop_rule: ""
+confidence: low

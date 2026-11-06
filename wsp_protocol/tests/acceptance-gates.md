@@ -1,0 +1,22 @@
+# WSP acceptance gates
+
+- [ ] Authorization and license checked.
+- [ ] Base checkpoint hash recorded and source immutable.
+- [ ] Correct architecture/format adapter selected; unknowns explicit.
+- [ ] Adapter conformance tests passed for operations used.
+- [ ] Reference inference output matches baseline within tolerance.
+- [ ] Behavioral defect reproduced with stable protocol.
+- [ ] Diagnostic/search/validation/holdout split established.
+- [ ] Circuit map links every claim to trace/tensor evidence.
+- [ ] Hypotheses include competing explanations and falsifiable predictions.
+- [ ] Ablation has matched controls and dose-response where appropriate.
+- [ ] Candidate parameterization is bounded and minimal.
+- [ ] Search budget and stopping criteria recorded.
+- [ ] No-op and random controls included.
+- [ ] Candidate improves beyond expected noise.
+- [ ] Critical capabilities and safety behavior do not regress.
+- [ ] Final holdout not used for tuning.
+- [ ] Patch is reversible and tied to exact base hash.
+- [ ] Patched artifact reloads in target runtime.
+- [ ] Clean-base reproduction passes.
+- [ ] Human approval obtained before production promotion.

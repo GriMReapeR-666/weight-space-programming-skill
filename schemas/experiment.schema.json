@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "id",
+    "base_hash",
+    "method",
+    "seed",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "base_hash": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "targets": {
+      "type": "array"
+    },
+    "data_versions": {
+      "type": "object"
+    },
+    "hyperparameters": {
+      "type": "object"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "environment": {
+      "type": "object"
+    },
+    "baseline_metrics": {
+      "type": "object"
+    },
+    "candidate_metrics": {
+      "type": "object"
+    },
+    "output_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "running",
+        "completed",
+        "failed",
+        "rejected",
+        "accepted"
+      ]
+    }
+  }
+}

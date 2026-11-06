@@ -1,0 +1,33 @@
+# Common Python ignores
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.dist/
+build/
+*.log
+.env
+.venv
+
+# IDE/editor files
+.vscode/
+.idea/
+*.sublime-workspace
+
+# ── Model weights & large assets (never committed) ──────────────────────
+large_assets/
+models/*
+!models/MODELS.md
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.pkl
+# Experiment outputs
+experiment_log.jsonl
+*.jsonl

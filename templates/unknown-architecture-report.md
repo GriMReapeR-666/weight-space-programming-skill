@@ -1,0 +1,22 @@
+# Unknown architecture discovery report
+
+- Artifact ID / hash:
+- Date / environment:
+- Framework and version:
+- Model code trust status:
+- Detected artifact format:
+- Candidate adapter(s) and confidence:
+- Evidence for architecture inference:
+- Component graph location:
+- Parameter/buffer inventory location:
+- Custom ops / kernels:
+- Statefulness / recurrent state:
+- Distributed / sharded layout:
+- Quantization / sparsity:
+- Input and output contract:
+- Capabilities verified:
+- Capabilities unknown or unsupported:
+- Risks and unresolved questions:
+- Recommended adapter scaffold:
+- Read-only baseline status:
+- Approval required before mutation:
