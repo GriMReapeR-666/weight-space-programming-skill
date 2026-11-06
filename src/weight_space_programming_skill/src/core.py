@@ -7,7 +7,7 @@ method. The core returns a concatenated string of all adapter results. If no
 adapters are available it returns a helpful placeholder.
 """
 
-from . import importlib  # testable shim; test monkeypatches weight_space_programming_skill.src.core.importlib
+import importlib
 import re
 from typing import List
 
