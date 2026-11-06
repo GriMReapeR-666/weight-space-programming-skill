@@ -141,7 +141,9 @@ def verify_model_equivalence(path_a: str, path_b: str, atol: float = 1e-5) -> bo
         tb = tensors_b[k]
         if ta.shape != tb.shape:
             return False
-        if not torch.allclose(ta.float(), tb.float(), atol=atol):
+        # Adapt numerical tolerance for half-precision floating point representations
+        eff_atol = 5e-4 if ta.dtype in (torch.float16, torch.bfloat16) else atol
+        if not torch.allclose(ta.float(), tb.float(), atol=eff_atol):
             return False
     return True
 

@@ -28,9 +28,9 @@ def identify_architecture(path: str) -> Dict[str, Any]:
 
     # Detect hidden dimension and attention heads
     for name, s in shapes.items():
-        if re.search(r"self_attn\.q_proj\.weight|attn\.q\.", name):
+        if re.search(r"self_attn\.q_proj\.weight|attn\.q\.|attn\.wqkv\.weight", name, re.IGNORECASE):
             hidden_dim = s[1] if len(s) == 2 else None
-            out_dim = s[0]
+            out_dim = s[0] // 3 if "wqkv" in name.lower() else s[0]
             # Standard head dim is typically 64 or 128
             for candidate_head_dim in (64, 128, 96):
                 if out_dim % candidate_head_dim == 0:
