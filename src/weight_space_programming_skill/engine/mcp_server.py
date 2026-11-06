@@ -14,15 +14,26 @@ from typing import Any, Callable, Dict, List, Optional
 
 import torch
 
+from .causal_falsification_verifier import (
+    CausalFalsificationVerifier,
+)
 from .graph_engine import identify_architecture, reconstruct_graph
+from .introspective_simulation import (
+    CriticDiscernmentEngine,
+    ErrorCatalogManager,
+)
 from .loader import ModelLoader
+from .pareto_surgery_planner import ParetoSurgeryPlanner
 from .patch_engine import apply_patch, rollback_patch, validate_patch
+from .selective_precision_controller import SelectivePrecisionController
+from .subspace_feature_analyzer import profile_model_subspaces
 from .tensor_engine import (
     analyze_weight_directions,
     inspect_model,
     inspect_tensor,
     summarize_weights,
 )
+from .tpt_sampler import ReasoningRollout, ThinkPruneTrainEngine
 from .types import PatchManifest, PatchOperation
 
 logger = logging.getLogger("wsp.mcp")
@@ -79,6 +90,107 @@ def _handle_analyze_directions(args: Dict[str, Any]) -> Dict[str, Any]:
         if k == tensor_name:
             return analyze_weight_directions(tensor, top_k=top_k)
     raise KeyError(f"Tensor '{tensor_name}' not found in {checkpoint_path}")
+
+
+def _handle_profile_subspaces(args: Dict[str, Any]) -> Dict[str, Any]:
+    checkpoint_path = args["checkpoint_path"]
+    cond_threshold = float(args.get("cond_threshold", 100.0))
+    subspace_map = profile_model_subspaces(checkpoint_path, cond_threshold=cond_threshold)
+    return _to_serializable(subspace_map)
+
+
+def _handle_plan_surgery(args: Dict[str, Any]) -> Dict[str, Any]:
+    checkpoint_path = args["checkpoint_path"]
+    objective = args.get("objective", "Surgical parameter enhancement")
+    preservation_epsilon = float(args.get("preservation_epsilon", 0.01))
+    cond_limit = float(args.get("cond_limit", 250.0))
+    plan = ParetoSurgeryPlanner.formulate_plan(
+        checkpoint_path=checkpoint_path,
+        objective=objective,
+        preservation_epsilon=preservation_epsilon,
+        cond_limit=cond_limit,
+    )
+    return _to_serializable(plan)
+
+
+def _handle_verify_edit_gate(args: Dict[str, Any]) -> Dict[str, Any]:
+    tensor_name = args["tensor_name"]
+    CausalFalsificationVerifier.verify_target_allowed(tensor_name)
+
+    orig_data = args.get("original")
+    cand_data = args.get("candidate")
+    total_params = int(args.get("total_model_parameters", 1_000_000))
+
+    result: Dict[str, Any] = {"target_allowed": True, "passed": True}
+    if orig_data is not None and cand_data is not None:
+        orig_t = torch.tensor(orig_data, dtype=torch.float32)
+        cand_t = torch.tensor(cand_data, dtype=torch.float32)
+        CausalFalsificationVerifier.verify_no_uniform_scaling(orig_t, cand_t)
+        metrics = CausalFalsificationVerifier.verify_edit_distance_and_fraction(
+            orig_t, cand_t, total_model_parameters=total_params
+        )
+        result["metrics"] = metrics
+    return result
+
+
+def _handle_dequantize_block(args: Dict[str, Any]) -> Dict[str, Any]:
+    block_format = args.get("format", "q8_0").lower()
+    hex_str = args["hex_data"]
+    scale = float(args.get("scale", 1.0))
+    data_bytes = bytes.fromhex(hex_str)
+    if block_format == "q8_0":
+        tensor = SelectivePrecisionController.dequantize_q8_0_block(data_bytes, scale)
+    elif block_format == "q4_0":
+        tensor = SelectivePrecisionController.dequantize_q4_0_block(data_bytes, scale)
+    else:
+        raise ValueError(f"Unsupported block format '{block_format}'. Supported: 'q8_0', 'q4_0'.")
+    return {"format": block_format, "scale": scale, "values": tensor.tolist()}
+
+
+def _handle_evaluate_critique(args: Dict[str, Any]) -> Dict[str, Any]:
+    trace_id = args.get("trace_id", "trace_001")
+    problem = args.get("problem", "")
+    trace = args.get("trace", "")
+    catalog = ErrorCatalogManager()
+    pair = CriticDiscernmentEngine.generate_critique_pair(trace_id, problem, trace, catalog)
+    chosen_option = args.get("chosen_option")
+    if chosen_option:
+        is_correct, score = CriticDiscernmentEngine.evaluate_discernment(pair, chosen_option)
+        return {
+            "critique_pair": _to_serializable(pair),
+            "chosen_option": chosen_option,
+            "is_correct": is_correct,
+            "reward_score": score,
+        }
+    return {"critique_pair": _to_serializable(pair)}
+
+
+def _handle_prune_traces(args: Dict[str, Any]) -> Dict[str, Any]:
+    raw_rollouts = args.get("rollouts", [])
+    rollouts = [
+        ReasoningRollout(
+            rollout_id=r.get("rollout_id", f"r_{i}"),
+            problem=r.get("problem", ""),
+            reasoning_trace=r.get("reasoning_trace", ""),
+            candidate_answer=str(r.get("candidate_answer", "")),
+            metadata=r.get("metadata", {}),
+        )
+        for i, r in enumerate(raw_rollouts)
+    ]
+    expected_map = {
+        r.get("problem", ""): str(r.get("expected_answer", ""))
+        for r in raw_rollouts
+        if "expected_answer" in r
+    }
+
+    def verifier(prob: str, ans: str) -> bool:
+        expected = expected_map.get(prob)
+        if expected is not None:
+            return ans.strip().lower() == expected.strip().lower()
+        return True
+
+    res = ThinkPruneTrainEngine.prune_and_filter(rollouts, verifier)
+    return _to_serializable(res)
 
 
 # Declarative tool registry with schemas
@@ -190,6 +302,98 @@ TOOLS_REGISTRY: Dict[str, Dict[str, Any]] = {
             "required": ["patched_model_path", "patch_path", "restored_model_path"],
         },
         "handler": lambda args: rollback_patch(args["patched_model_path"], _load_manifest_file(args["patch_path"]), args["restored_model_path"]),
+    },
+    "profile_subspaces": {
+        "description": "Profile weight-space manifolds, singular spectrum condition numbers, and effective stable rank.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "checkpoint_path": {"type": "string", "description": "Path to checkpoint file"},
+                "cond_threshold": {"type": "number", "description": "Condition number threshold for degenerate manifolds", "default": 100.0},
+            },
+            "required": ["checkpoint_path"],
+        },
+        "handler": _handle_profile_subspaces,
+    },
+    "plan_surgery": {
+        "description": "Formulate Pareto-constrained minimal-rank surgery plans with execution DAG and preservation bounds.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "checkpoint_path": {"type": "string", "description": "Path to checkpoint file"},
+                "objective": {"type": "string", "description": "High-level transformation goal", "default": "Surgical parameter enhancement"},
+                "preservation_epsilon": {"type": "number", "description": "Max permitted regression on anchor capabilities", "default": 0.01},
+                "cond_limit": {"type": "number", "description": "Condition number limit for spectral stabilization", "default": 250.0},
+            },
+            "required": ["checkpoint_path"],
+        },
+        "handler": _handle_plan_surgery,
+    },
+    "verify_edit_gate": {
+        "description": "Verify multi-layer Edit Gate safety: locks embeddings/norms/heads, enforces 1% cap and normalized L2 limits.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tensor_name": {"type": "string", "description": "Name of target tensor to modify"},
+                "original": {"type": "array", "description": "Optional original tensor values for numerical validation"},
+                "candidate": {"type": "array", "description": "Optional modified candidate tensor values"},
+                "total_model_parameters": {"type": "integer", "description": "Total parameter count of base model", "default": 1000000},
+            },
+            "required": ["tensor_name"],
+        },
+        "handler": _handle_verify_edit_gate,
+    },
+    "dequantize_block": {
+        "description": "Surgically dequantize 32-element Q8_0 or Q4_0 quantization blocks from hex bytes to float32 values.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "hex_data": {"type": "string", "description": "Hex-encoded raw quantized bytes (32 bytes for Q8_0, 16 bytes for Q4_0)"},
+                "format": {"type": "string", "enum": ["q8_0", "q4_0"], "description": "Quantization format", "default": "q8_0"},
+                "scale": {"type": "number", "description": "Block FP16 scaling factor", "default": 1.0},
+            },
+            "required": ["hex_data"],
+        },
+        "handler": _handle_dequantize_block,
+    },
+    "evaluate_critique": {
+        "description": "Execute Critic-Discernment Game (CDG) to generate contrasting Helpful vs. Misleading critique pairs and score discernment.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "trace_id": {"type": "string", "description": "Unique identifier for trajectory", "default": "trace_001"},
+                "problem": {"type": "string", "description": "Problem statement being solved"},
+                "trace": {"type": "string", "description": "Reasoning trace or diagnosis"},
+                "chosen_option": {"type": "string", "enum": ["A", "B"], "description": "Optional Prover selection ('A' or 'B') to evaluate"},
+            },
+            "required": ["trace"],
+        },
+        "handler": _handle_evaluate_critique,
+    },
+    "prune_traces": {
+        "description": "Execute Think-Prune-Train (TPT) ground-truth anchored trajectory pruning to filter hallucinated reasoning steps.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "rollouts": {
+                    "type": "array",
+                    "description": "List of sampled candidate reasoning rollouts",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "rollout_id": {"type": "string"},
+                            "problem": {"type": "string"},
+                            "reasoning_trace": {"type": "string"},
+                            "candidate_answer": {"type": "string"},
+                            "expected_answer": {"type": "string"},
+                        },
+                        "required": ["problem", "candidate_answer"],
+                    },
+                },
+            },
+            "required": ["rollouts"],
+        },
+        "handler": _handle_prune_traces,
     },
 }
 

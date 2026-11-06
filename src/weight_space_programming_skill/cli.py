@@ -20,6 +20,11 @@ Usage:
 
     python -m weight_space_programming_skill scaffold model.pt --output adapter.py --map arch.json
     python -m weight_space_programming_skill log --ledger exp.jsonl --event patch --model model.pt --notes "..."
+
+    python -m weight_space_programming_skill profile model.safetensors [--cond-threshold 100.0]
+    python -m weight_space_programming_skill plan model.safetensors [--objective "obj"]
+    python -m weight_space_programming_skill gate --tensor "model.layers.0.mlp.down_proj.weight"
+    python -m weight_space_programming_skill mcp
 """
 import sys
 import os
@@ -50,10 +55,18 @@ def main():
         _route_scaffold()
     elif cmd == "log":
         _route_log()
+    elif cmd == "profile":
+        _route_profile()
+    elif cmd == "plan":
+        _route_plan()
+    elif cmd == "gate":
+        _route_gate()
+    elif cmd == "mcp":
+        _route_mcp()
     elif cmd in ("-h", "--help", "help"):
         print(__doc__)
     else:
-        print(f"Unknown command: {cmd}\n\nAvailable: inspect patch merge lora scaffold log")
+        print(f"Unknown command: {cmd}\n\nAvailable: inspect patch merge lora scaffold log profile plan gate mcp")
         sys.exit(1)
 
 
@@ -125,6 +138,62 @@ def _route_scaffold():
 def _route_log():
     import experiment_ledger
     experiment_ledger.main()
+
+
+def _route_mcp():
+    from weight_space_programming_skill.engine import MCPServer
+    server = MCPServer()
+    server.run_stdio()
+
+
+def _route_profile():
+    import argparse
+    import json
+    p = argparse.ArgumentParser(description="Profile weight-space manifolds and condition numbers")
+    p.add_argument("checkpoint", help="Path to checkpoint file")
+    p.add_argument("--cond-threshold", type=float, default=100.0, help="Condition number limit")
+    args = p.parse_args()
+
+    from weight_space_programming_skill.engine import profile_model_subspaces
+    from weight_space_programming_skill.engine.mcp_server import _to_serializable
+    mapping = profile_model_subspaces(args.checkpoint, cond_threshold=args.cond_threshold)
+    print(json.dumps(_to_serializable(mapping), indent=2))
+
+
+def _route_plan():
+    import argparse
+    import json
+    p = argparse.ArgumentParser(description="Plan Pareto-constrained surgical intervention")
+    p.add_argument("checkpoint", help="Path to checkpoint file")
+    p.add_argument("--objective", default="Surgical parameter enhancement", help="Target goal")
+    p.add_argument("--epsilon", type=float, default=0.01, help="Preservation epsilon")
+    p.add_argument("--cond-limit", type=float, default=250.0, help="Condition limit")
+    args = p.parse_args()
+
+    from weight_space_programming_skill.engine import ParetoSurgeryPlanner
+    from weight_space_programming_skill.engine.mcp_server import _to_serializable
+    plan = ParetoSurgeryPlanner.formulate_plan(
+        checkpoint_path=args.checkpoint,
+        objective=args.objective,
+        preservation_epsilon=args.epsilon,
+        cond_limit=args.cond_limit,
+    )
+    print(json.dumps(_to_serializable(plan), indent=2))
+
+
+def _route_gate():
+    import argparse
+    p = argparse.ArgumentParser(description="Verify target tensor against Edit Gate policies")
+    p.add_argument("--tensor", required=True, help="Target tensor name")
+    args = p.parse_args()
+
+    from weight_space_programming_skill.engine import CausalFalsificationVerifier, EditGateViolation
+    try:
+        CausalFalsificationVerifier.verify_target_allowed(args.tensor)
+        print(f"PASS: Target '{args.tensor}' is allowed for editing.")
+    except EditGateViolation as exc:
+        print(f"REJECTED: {exc}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

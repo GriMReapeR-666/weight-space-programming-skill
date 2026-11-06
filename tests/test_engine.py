@@ -331,3 +331,126 @@ def test_mcp_server_protocol(tiny_checkpoint):
     payload = json.loads(call_res["result"]["content"][0]["text"])
     assert payload["total_parameters"] > 0
     assert payload["format"] in ("pytorch", "pt")
+
+
+def test_mcp_server_wsp_x_tools(tiny_checkpoint):
+    path, _ = tiny_checkpoint
+    from weight_space_programming_skill.engine import MCPServer
+    import json
+
+    server = MCPServer()
+
+    # 1. profile_subspaces
+    req = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 10,
+        "method": "tools/call",
+        "params": {
+            "name": "profile_subspaces",
+            "arguments": {"checkpoint_path": path, "cond_threshold": 50.0},
+        },
+    })
+    res = json.loads(server.process_message(req))
+    assert "result" in res
+    prof = json.loads(res["result"]["content"][0]["text"])
+    assert "profiles" in prof
+
+    # 2. plan_surgery
+    req = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 11,
+        "method": "tools/call",
+        "params": {
+            "name": "plan_surgery",
+            "arguments": {"checkpoint_path": path, "objective": "Stabilize numerical rank"},
+        },
+    })
+    res = json.loads(server.process_message(req))
+    plan = json.loads(res["result"]["content"][0]["text"])
+    assert "plan_id" in plan
+    assert "actions" in plan
+
+    # 3. verify_edit_gate (allowed target vs forbidden target)
+    req_ok = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 12,
+        "method": "tools/call",
+        "params": {
+            "name": "verify_edit_gate",
+            "arguments": {"tensor_name": "layers.0.mlp.down_proj.weight"},
+        },
+    })
+    res_ok = json.loads(server.process_message(req_ok))
+    gate_ok = json.loads(res_ok["result"]["content"][0]["text"])
+    assert gate_ok["passed"] is True
+
+    req_forbidden = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 13,
+        "method": "tools/call",
+        "params": {
+            "name": "verify_edit_gate",
+            "arguments": {"tensor_name": "lm_head.weight"},
+        },
+    })
+    res_forbidden = json.loads(server.process_message(req_forbidden))
+    assert res_forbidden["result"]["isError"] is True
+    assert "forbidden scope pattern" in res_forbidden["result"]["content"][0]["text"]
+
+    # 4. dequantize_block (Q8_0)
+    # 32 bytes of zeros
+    hex_zeros = "00" * 32
+    req_dq = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 14,
+        "method": "tools/call",
+        "params": {
+            "name": "dequantize_block",
+            "arguments": {"hex_data": hex_zeros, "format": "q8_0", "scale": 0.5},
+        },
+    })
+    res_dq = json.loads(server.process_message(req_dq))
+    dq = json.loads(res_dq["result"]["content"][0]["text"])
+    assert len(dq["values"]) == 32
+    assert dq["scale"] == 0.5
+
+    # 5. evaluate_critique
+    req_crit = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 15,
+        "method": "tools/call",
+        "params": {
+            "name": "evaluate_critique",
+            "arguments": {
+                "trace_id": "test_trace",
+                "problem": "math problem",
+                "trace": "Generation hits token limit copying loop",
+                "chosen_option": "A",
+            },
+        },
+    })
+    res_crit = json.loads(server.process_message(req_crit))
+    crit = json.loads(res_crit["result"]["content"][0]["text"])
+    assert "critique_pair" in crit
+    assert "is_correct" in crit
+
+    # 6. prune_traces
+    req_tpt = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 16,
+        "method": "tools/call",
+        "params": {
+            "name": "prune_traces",
+            "arguments": {
+                "rollouts": [
+                    {"rollout_id": "r1", "problem": "2+2", "reasoning_trace": "...", "candidate_answer": "4", "expected_answer": "4"},
+                    {"rollout_id": "r2", "problem": "2+2", "reasoning_trace": "...", "candidate_answer": "5", "expected_answer": "4"},
+                ]
+            },
+        },
+    })
+    res_tpt = json.loads(server.process_message(req_tpt))
+    tpt = json.loads(res_tpt["result"]["content"][0]["text"])
+    assert tpt["total_rollouts"] == 2
+    assert tpt["pruned_correct_count"] == 1
+    assert tpt["success_rate"] == 0.5
