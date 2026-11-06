@@ -19,10 +19,18 @@ from .tensor_engine import (
     inspect_tensor,
     summarize_weights,
 )
+from .pareto_surgery_planner import ParetoSurgeryPlanner
+from .subspace_feature_analyzer import (
+    compute_spectral_regularization_delta,
+    profile_matrix_subspace,
+    profile_model_subspaces,
+    project_delta_onto_null_space,
+)
 from .types import (
     AblationMode,
     AblationResult,
     ActivationTrace,
+    CapabilitySubspaceMap,
     CircuitMap,
     CircuitNode,
     ComputationGraph,
@@ -32,6 +40,9 @@ from .types import (
     ModelMetadata,
     PatchManifest,
     PatchOperation,
+    SubspaceProfile,
+    SurgeryAction,
+    SurgeryPlan,
     TensorRole,
     TensorSummary,
 )
@@ -55,6 +66,12 @@ __all__ = [
     "validate_patch",
     "apply_patch",
     "rollback_patch",
+    # WSP-X Intelligence & Surgery
+    "profile_matrix_subspace",
+    "profile_model_subspaces",
+    "compute_spectral_regularization_delta",
+    "project_delta_onto_null_space",
+    "ParetoSurgeryPlanner",
     # Evaluation & Infrastructure
     "compare_models",
     "evaluate_metrics",
@@ -76,4 +93,8 @@ __all__ = [
     "PatchOperation",
     "PatchManifest",
     "EvaluationResult",
+    "SubspaceProfile",
+    "CapabilitySubspaceMap",
+    "SurgeryAction",
+    "SurgeryPlan",
 ]

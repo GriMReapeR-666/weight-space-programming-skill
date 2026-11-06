@@ -166,3 +166,46 @@ class EvaluationResult:
     p_value: Optional[float]
     passed_regression_gate: bool
     regression_summary: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class SubspaceProfile:
+    tensor_name: str
+    condition_number: float
+    effective_rank: int
+    singular_values_top_5: List[float]
+    is_degenerate: bool
+    dominant_direction_variance_ratio: float
+    probe_alignment_score: Optional[float] = None
+
+
+@dataclass
+class CapabilitySubspaceMap:
+    model_path: str
+    total_matrices_profiled: int
+    degenerate_layers: List[str]
+    profiles: Dict[str, SubspaceProfile] = field(default_factory=dict)
+    latent_capabilities: List[str] = field(default_factory=list)
+    active_circuits: List[str] = field(default_factory=list)
+
+
+@dataclass
+class SurgeryAction:
+    action_id: str
+    target_tensor: str
+    operation_type: str  # "spectral_clamp", "null_space_projection", "margin_alignment", "bias_calibrate"
+    parameters: Dict[str, Any] = field(default_factory=dict)
+    estimated_flops_ratio: float = 1.0
+    preserved_anchors: List[str] = field(default_factory=list)
+    risk_level: str = "low"  # "low", "medium", "high"
+
+
+@dataclass
+class SurgeryPlan:
+    plan_id: str
+    target_model_path: str
+    objective: str
+    preservation_constraint_epsilon: float
+    actions: List[SurgeryAction] = field(default_factory=list)
+    dependency_dag: Dict[str, List[str]] = field(default_factory=dict)
+    summary: str = ""
