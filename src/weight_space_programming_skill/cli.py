@@ -24,6 +24,7 @@ Usage:
     python -m weight_space_programming_skill profile model.safetensors [--cond-threshold 100.0]
     python -m weight_space_programming_skill plan model.safetensors [--objective "obj"]
     python -m weight_space_programming_skill gate --tensor "model.layers.0.mlp.down_proj.weight"
+    python -m weight_space_programming_skill rsi --catalog
     python -m weight_space_programming_skill mcp
 """
 import sys
@@ -61,12 +62,14 @@ def main():
         _route_plan()
     elif cmd == "gate":
         _route_gate()
+    elif cmd == "rsi":
+        _route_rsi()
     elif cmd == "mcp":
         _route_mcp()
     elif cmd in ("-h", "--help", "help"):
         print(__doc__)
     else:
-        print(f"Unknown command: {cmd}\n\nAvailable: inspect patch merge lora scaffold log profile plan gate mcp")
+        print(f"Unknown command: {cmd}\n\nAvailable: inspect patch merge lora scaffold log profile plan gate rsi mcp")
         sys.exit(1)
 
 
@@ -194,6 +197,49 @@ def _route_gate():
     except EditGateViolation as exc:
         print(f"REJECTED: {exc}", file=sys.stderr)
         sys.exit(1)
+
+
+def _route_rsi():
+    import argparse
+    import json
+    p = argparse.ArgumentParser(description="Recursive Self-Improvement (RSI) commands")
+    p.add_argument("--catalog", action="store_true", help="Print persistent error catalog")
+    p.add_argument("--rollouts", help="Path to rollouts JSON file to run an RSI cycle")
+    args = p.parse_args()
+
+    from weight_space_programming_skill.engine import (
+        ErrorCatalogManager,
+        ReasoningRollout,
+        RecursiveSelfImprovementEngine,
+    )
+
+    if args.catalog or not args.rollouts:
+        catalog = ErrorCatalogManager()
+        patterns = catalog.export_catalog()
+        print(json.dumps({"total_patterns": len(patterns), "patterns": patterns}, indent=2))
+        return
+
+    with open(args.rollouts, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    rollouts = [
+        ReasoningRollout(
+            rollout_id=r.get("rollout_id", f"r_{i}"),
+            problem=r.get("problem", ""),
+            reasoning_trace=r.get("reasoning_trace", ""),
+            candidate_answer=str(r.get("candidate_answer", "")),
+        )
+        for i, r in enumerate(data)
+    ]
+    expected_map = {r.get("problem", ""): str(r.get("expected_answer", "")) for r in data if "expected_answer" in r}
+
+    def verifier(prob: str, ans: str) -> bool:
+        expected = expected_map.get(prob)
+        return ans.strip().lower() == expected.strip().lower() if expected else True
+
+    engine = RecursiveSelfImprovementEngine()
+    result = engine.run_cycle_on_traces(rollouts, verifier)
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

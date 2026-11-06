@@ -30,6 +30,11 @@ from .introspective_simulation import (
     FailurePattern,
 )
 from .pareto_surgery_planner import ParetoSurgeryPlanner
+from .recursive_self_improvement import (
+    RSICycleConfig,
+    RSICycleResult,
+    RecursiveSelfImprovementEngine,
+)
 from .selective_precision_controller import SelectivePrecisionController
 from .tpt_sampler import (
     ReasoningRollout,
@@ -98,6 +103,10 @@ __all__ = [
     "ReasoningRollout",
     "TPTBatchResult",
     "ThinkPruneTrainEngine",
+    # Recursive Self-Improvement (RSI)
+    "RecursiveSelfImprovementEngine",
+    "RSICycleConfig",
+    "RSICycleResult",
     # Evaluation & Infrastructure
     "compare_models",
     "evaluate_metrics",

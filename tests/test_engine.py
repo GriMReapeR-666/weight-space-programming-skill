@@ -454,3 +454,102 @@ def test_mcp_server_wsp_x_tools(tiny_checkpoint):
     assert tpt["total_rollouts"] == 2
     assert tpt["pruned_correct_count"] == 1
     assert tpt["success_rate"] == 0.5
+
+    # 7. run_rsi_cycle
+    req_rsi = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 17,
+        "method": "tools/call",
+        "params": {
+            "name": "run_rsi_cycle",
+            "arguments": {
+                "rollouts": [
+                    {"rollout_id": "r1", "problem": "Find root", "reasoning_trace": "Hits copying loop", "candidate_answer": "wrong", "expected_answer": "correct"},
+                    {"rollout_id": "r2", "problem": "Find root", "reasoning_trace": "Correct derivation", "candidate_answer": "correct", "expected_answer": "correct"},
+                ]
+            },
+        },
+    })
+    res_rsi = json.loads(server.process_message(req_rsi))
+    rsi = json.loads(res_rsi["result"]["content"][0]["text"])
+    assert rsi["total_sampled"] == 2
+    assert rsi["retained_correct_count"] == 1
+    assert len(rsi["projected_traces"]) == 1
+
+    # 8. export_error_catalog
+    req_cat = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 18,
+        "method": "tools/call",
+        "params": {
+            "name": "export_error_catalog",
+            "arguments": {},
+        },
+    })
+    res_cat = json.loads(server.process_message(req_cat))
+    cat = json.loads(res_cat["result"]["content"][0]["text"])
+    assert cat["total_patterns"] >= 4
+
+
+def test_recursive_self_improvement_engine():
+    from weight_space_programming_skill.engine import (
+        ReasoningRollout,
+        RecursiveSelfImprovementEngine,
+    )
+    import torch
+    import torch.nn as nn
+
+    engine = RecursiveSelfImprovementEngine()
+
+    # 1. Trace-space cycle
+    rollouts = [
+        ReasoningRollout("r1", "3*3", "3*3=9", "9"),
+        ReasoningRollout("r2", "3*3", "3*3=6", "6"),
+    ]
+    res_trace = engine.run_cycle_on_traces(rollouts, lambda p, a: a == "9")
+    assert res_trace["retained_correct_count"] == 1
+    assert res_trace["rejected_count"] == 1
+    assert len(res_trace["projected_traces"]) == 1
+
+    # 2. Weight-space cycle: Sustainable improvement
+    base = nn.Linear(8, 2, bias=False)
+    cand = nn.Linear(8, 2, bias=False)
+    cand.weight.data.copy_(base.weight.data)
+    # Add a slight beneficial bias along sample 0
+    with torch.no_grad():
+        cand.weight.data[0, 0] += 0.05
+
+    target_samples = [torch.ones(1, 8)]
+    anchor_samples = [torch.zeros(1, 8)]
+
+    def score_fn(m, x):
+        return float(m(x)[0, 0].item())
+
+    cycle_res = engine.execute_weight_space_cycle(
+        base_model=base,
+        candidate_model=cand,
+        target_tensor_name="layers.0.mlp.down_proj.weight",
+        target_eval_samples=target_samples,
+        anchor_eval_samples=anchor_samples,
+        scoring_fn=score_fn,
+    )
+    assert cycle_res.accepted is True
+    assert cycle_res.status == "accepted"
+
+    # 3. Weight-space cycle: Reverted degenerative improvement
+    bad_cand = nn.Linear(8, 2, bias=False)
+    bad_cand.weight.data.copy_(base.weight.data)
+    with torch.no_grad():
+        bad_cand.weight.data[0, 0] -= 0.1  # Degrades target performance
+
+    bad_cycle = engine.execute_weight_space_cycle(
+        base_model=base,
+        candidate_model=bad_cand,
+        target_tensor_name="layers.0.mlp.down_proj.weight",
+        target_eval_samples=target_samples,
+        anchor_eval_samples=anchor_samples,
+        scoring_fn=score_fn,
+    )
+    assert bad_cycle.accepted is False
+    assert bad_cycle.rollback_performed is True
+    assert bad_cycle.status == "reverted_degenerative"

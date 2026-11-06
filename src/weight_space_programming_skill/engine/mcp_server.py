@@ -25,6 +25,7 @@ from .introspective_simulation import (
 from .loader import ModelLoader
 from .pareto_surgery_planner import ParetoSurgeryPlanner
 from .patch_engine import apply_patch, rollback_patch, validate_patch
+from .recursive_self_improvement import RecursiveSelfImprovementEngine
 from .selective_precision_controller import SelectivePrecisionController
 from .subspace_feature_analyzer import profile_model_subspaces
 from .tensor_engine import (
@@ -191,6 +192,41 @@ def _handle_prune_traces(args: Dict[str, Any]) -> Dict[str, Any]:
 
     res = ThinkPruneTrainEngine.prune_and_filter(rollouts, verifier)
     return _to_serializable(res)
+
+
+def _handle_run_rsi_cycle(args: Dict[str, Any]) -> Dict[str, Any]:
+    raw_rollouts = args.get("rollouts", [])
+    rollouts = [
+        ReasoningRollout(
+            rollout_id=r.get("rollout_id", f"r_{i}"),
+            problem=r.get("problem", ""),
+            reasoning_trace=r.get("reasoning_trace", ""),
+            candidate_answer=str(r.get("candidate_answer", "")),
+            metadata=r.get("metadata", {}),
+        )
+        for i, r in enumerate(raw_rollouts)
+    ]
+    expected_map = {
+        r.get("problem", ""): str(r.get("expected_answer", ""))
+        for r in raw_rollouts
+        if "expected_answer" in r
+    }
+
+    def verifier(prob: str, ans: str) -> bool:
+        expected = expected_map.get(prob)
+        if expected is not None:
+            return ans.strip().lower() == expected.strip().lower()
+        return True
+
+    engine = RecursiveSelfImprovementEngine()
+    cycle_res = engine.run_cycle_on_traces(rollouts, verifier)
+    return _to_serializable(cycle_res)
+
+
+def _handle_export_error_catalog(args: Dict[str, Any]) -> Dict[str, Any]:
+    catalog = ErrorCatalogManager()
+    patterns = catalog.export_catalog()
+    return {"total_patterns": len(patterns), "patterns": patterns}
 
 
 # Declarative tool registry with schemas
@@ -394,6 +430,39 @@ TOOLS_REGISTRY: Dict[str, Dict[str, Any]] = {
             "required": ["rollouts"],
         },
         "handler": _handle_prune_traces,
+    },
+    "run_rsi_cycle": {
+        "description": "Execute an end-to-end Recursive Self-Improvement (RSI) cycle: TPT prune + CDG diagnosis + frontier projection + error catalog alignment.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "rollouts": {
+                    "type": "array",
+                    "description": "List of sampled candidate reasoning rollouts",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "rollout_id": {"type": "string"},
+                            "problem": {"type": "string"},
+                            "reasoning_trace": {"type": "string"},
+                            "candidate_answer": {"type": "string"},
+                            "expected_answer": {"type": "string"},
+                        },
+                        "required": ["problem", "candidate_answer"],
+                    },
+                },
+            },
+            "required": ["rollouts"],
+        },
+        "handler": _handle_run_rsi_cycle,
+    },
+    "export_error_catalog": {
+        "description": "Export the persistent structural error catalog tracking failure modes and recommended interventions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+        "handler": _handle_export_error_catalog,
     },
 }
 
