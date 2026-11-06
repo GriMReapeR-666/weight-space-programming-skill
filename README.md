@@ -29,10 +29,10 @@ This platform gives any AI agent or software engineer an operational toolkit to 
 WSP-X runs seamlessly across all major AI coding agents and local execution environments:
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        CALLING AGENT / HARNESS                         │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        CALLING AGENT / HARNESS                              │
 │   Claude Code  │  OpenAI Codex  │  OpenCode  │  Cursor / Aider  │  Local LLM│
-└───────────────────────────────────┬────────────────────────────────────┘
+└───────────────────────────────────┬─────────────────────────────────────────┘
                                     │ stdio / JSON-RPC 2.0
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
