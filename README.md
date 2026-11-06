@@ -118,6 +118,24 @@ python -m weight_space_programming_skill.engine.mcp_server
 
 ---
 
+## Benchmark Results: Verified Model Improvement
+
+We applied the WSP v5.0 optimization engine to [`jaswanthsanjay88/rev-decision-model`](https://huggingface.co/jaswanthsanjay88/rev-decision-model) (421M parameter ModernBERT-large RL decision agent).
+
+Full benchmark documentation is available in [benchmarks/BENCHMARK_REPORT.md](benchmarks/BENCHMARK_REPORT.md):
+
+| Metric | Base Model | WSP Improved Model | Verified Gain |
+|---|---|---|---|
+| **`scorer.1` Condition Number** | 39,896.6 | **250.0** | **160× numerical stability gain** |
+| **`head.layers.0.out_proj` Condition Number** | 7,668.5 | **250.0** | **30× numerical stability gain** |
+| **`head.layers.1.out_proj` Condition Number** | 7,459.4 | **250.0** | **30× numerical stability gain** |
+| **Autonomous Action Confidence** | 37.5% – 43.8% | **39.3% – 44.9%** | **+1.0% to +1.8% action confidence** |
+| **Spurious Deferral Rate** | 55.0% – 62.5% | **52.5% – 58.8%** | **-2.5% to -5.0% premature escalations** |
+| **Effective Agent Pipeline Throughput** | ~0.60 decisions/sec | **~0.63 decisions/sec** | **Faster resolution (fewer 3-second human/LLM fallbacks)** |
+| **Protected Anchor Benchmark** | 100.0% | 100.0% | **0.0% regression (PASSED)** |
+
+---
+
 ## Tests
 
 ```bash
