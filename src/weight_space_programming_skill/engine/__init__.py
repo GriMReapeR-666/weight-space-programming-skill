@@ -23,8 +23,19 @@ from .causal_falsification_verifier import (
     CausalFalsificationVerifier,
     EditGateViolation,
 )
+from .introspective_simulation import (
+    CriticDiscernmentEngine,
+    CritiquePair,
+    ErrorCatalogManager,
+    FailurePattern,
+)
 from .pareto_surgery_planner import ParetoSurgeryPlanner
 from .selective_precision_controller import SelectivePrecisionController
+from .tpt_sampler import (
+    ReasoningRollout,
+    TPTBatchResult,
+    ThinkPruneTrainEngine,
+)
 from .subspace_feature_analyzer import (
     compute_spectral_regularization_delta,
     profile_matrix_subspace,
@@ -80,6 +91,13 @@ __all__ = [
     "SelectivePrecisionController",
     "CausalFalsificationVerifier",
     "EditGateViolation",
+    "ErrorCatalogManager",
+    "FailurePattern",
+    "CritiquePair",
+    "CriticDiscernmentEngine",
+    "ReasoningRollout",
+    "TPTBatchResult",
+    "ThinkPruneTrainEngine",
     # Evaluation & Infrastructure
     "compare_models",
     "evaluate_metrics",
