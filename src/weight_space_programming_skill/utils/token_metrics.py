@@ -1,5 +1,6 @@
 import time
 
+
 class TokenMetrics:
     """Simple collector for token‑saving metrics.
 
@@ -25,4 +26,6 @@ class TokenMetrics:
         return sum(r["saved"] for r in self.records)
 
     def summary(self) -> str:
-        return f"Recorded {len(self.records)} commands, total tokens saved: {self.total_saved()}"
+        count = len(self.records)
+        saved = self.total_saved()
+        return f"Recorded {count} commands, total tokens saved: {saved}"

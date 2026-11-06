@@ -1,11 +1,12 @@
 # Core
 jsonschema
+pyyaml
 
 # Testing
 pytest
 pytest-timeout
 
-# Type / lint (optional, used in CI)
+# Type / lint (used in CI)
 mypy
 flake8
 

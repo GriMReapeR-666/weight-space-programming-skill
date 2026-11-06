@@ -1,5 +1,6 @@
 import jsonschema
 
+
 def validate_schema(instance, schema):
     """Validate *instance* against a JSON *schema* using ``jsonschema``.
 

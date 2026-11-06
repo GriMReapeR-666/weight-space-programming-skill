@@ -96,11 +96,12 @@ def _route_patch():
         sys.argv = ["patch_delta", "--checkpoint", args.checkpoint, "--patch", args.patch]
         patch_delta.main()
     elif ext == "safetensors":
-        import safetensors_adapter, json
+        import json
         from pathlib import Path
+        import safetensors_adapter
         spec = json.loads(Path(args.patch).read_text())
         result = safetensors_adapter.apply_patch(args.checkpoint, spec, args.output)
-        import json as _json; print(_json.dumps(result, indent=2))
+        print(json.dumps(result, indent=2))
     else:
         print(f"Unsupported format: .{ext}", file=sys.stderr)
         sys.exit(1)

@@ -1,8 +1,10 @@
 """Environment inspector utilities.
 
-Provides :func:`inspect_environment` which returns a dict indicating whether ETK/RTK commands are available.
+Provides :func:`inspect_environment` which returns a dict indicating
+whether ETK/RTK commands are available.
 """
 import shutil
+
 
 def inspect_environment():
     """Check for presence of `etk` and `rtk` executables in PATH.
